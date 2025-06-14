@@ -271,16 +271,23 @@
       }
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        await new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            video.play(); // Start video playback
-            resolve();
-          };
-        });
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+          video.srcObject = stream;
+          video.setAttribute("playsinline", true); // ← penting buat Android Safari & Chrome
+
+          await new Promise((resolve) => {
+            video.onloadedmetadata = () => {
+              video.play().then(resolve);
+            };
+          });
+
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        } catch (err) {
+          alert("Failed to acquire camera feed: " + err.name + ": " + err.message);
+          throw err;
+        }
       }
 
       const faceMesh = new FaceMesh({
