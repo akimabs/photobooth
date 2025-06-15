@@ -3,230 +3,364 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wardah Product Demo</title>
+    <title>Virtual Makeup</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --primary-color: #c6e5e3;
-        --accent-color: #e79ca5;
-        --text-color: #6a4e4f;
-        --bg-color: #fdfcfc;
+        --accent-color: #f78fb3;
+        --highlight-color: #ffb6b9;
+        --tab-bg: #ffe5ec;
+        --text-dark: #5c2a4a;
+        --btn-inactive: #f4d6db;
+        --border-color: #f9c6d0;
+        --header-bg: #ffe5ec;
+        --header-icon: #d63384;
       }
 
       * {
-        box-sizing: border-box;
         margin: 0;
         padding: 0;
+        box-sizing: border-box;
         font-family: "Playfair Display", serif;
       }
 
+      html,
       body {
-        background: linear-gradient(135deg, #fef7f9 0%, #e4f5f3 100%);
+        height: 100%;
+        background: black;
+        overflow: hidden;
+      }
+
+      video,
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: 0;
+      }
+
+      .ui-overlay {
+        position: absolute;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      header {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding-top: 50px;
+        padding: 12px;
+        background-color: var(--header-bg);
+        gap: 12px;
+        pointer-events: auto;
+        color: var(--text-dark);
       }
 
-      .tabs {
+      header > .top-bar {
         display: flex;
-        justify-content: space-around;
-        background: #fff;
-        border-bottom: 2px solid var(--accent-color);
-        padding: 0 10px;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        justify-content: space-between;
         width: 100%;
-        max-width: 400px;
+        padding: 0 16px;
+        font-size: 20px;
       }
 
-      .tab {
-        padding: 14px 0;
-        font-size: 16px;
-        font-weight: 500;
-        color: var(--text-color);
-        background: none;
-        border: none;
-        outline: none;
-        position: relative;
-        flex: 1;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 999px;
-      }
-
-      .tab:hover {
-        background-color: var(--primary-color);
-      }
-
-      .tab.active {
-        color: var(--accent-color);
-        font-weight: 600;
-      }
-
-      .tab.active::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        left: 25%;
-        width: 50%;
-        height: 3px;
-        background-color: var(--accent-color);
-        border-radius: 2px;
-      }
-
-      .tab-content {
-        background: #fff;
-        padding: 20px;
-        margin-top: 10px;
+      .main-controls {
         width: 100%;
-        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .tab-switch {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-bottom: 10px;
+        padding-left: 10px;
+      }
+
+      .tab-switch button {
+        padding: 6px 12px;
         border-radius: 16px;
-        box-shadow: 0 6px 16px rgba(231, 156, 165, 0.2);
+        border: none;
+        background: var(--btn-inactive);
+        color: var(--text-dark);
+        cursor: pointer;
       }
 
-      .tab-panel {
+      .tab-switch button.active {
+        background: var(--accent-color);
+        color: white;
+      }
+
+      .bottom-controls {
+        background: white;
+        padding: 12px 0 12px 12px;
+        display: flex;
+        justify-content: center;
+        pointer-events: auto;
+        width: 100%;
+      }
+
+      .color-options-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .color-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        overflow-x: auto;
+      }
+
+      .color-row::-webkit-scrollbar {
         display: none;
       }
 
-      .tab-panel.active {
-        display: block;
-      }
-
-      .phone-frame {
-        width: 100%;
-        aspect-ratio: 9 / 16;
-        position: relative;
-        background: black;
-        border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-      }
-
-      #video,
-      #canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      #controls {
-        position: absolute;
-        bottom: 0;
-        z-index: 2;
+      .color-row-wrapper {
         display: flex;
-        justify-content: center;
-        gap: 10px;
-        padding: 10px;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.95);
-        height: 80px;
-        border-top: 1px solid #eec9c9;
+        align-items: flex-end;
+        gap: 12px;
+        padding-left: 10px;
+        padding-right: 0;
+        overflow: visible;
       }
 
       .color-btn {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        border: 2px solid var(--accent-color);
+        border: 2px solid #333;
+        flex-shrink: 0;
         cursor: pointer;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
       .color-btn:hover {
         transform: scale(1.1);
-        box-shadow: 0 0 10px rgba(231, 156, 165, 0.4);
+        box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
       }
 
-      .coming-soon {
+      .color-btn.selected {
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px var(--accent-color);
+      }
+
+      .buy-card {
+        position: relative;
+        width: 50px;
+        height: 60px;
+        border-radius: 10px;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
         align-items: center;
-        height: 100%;
-        background: linear-gradient(145deg, #fff0f4, #f7cdd4);
-        font-size: 24px;
-        color: var(--accent-color);
-        font-weight: 600;
-        text-shadow: 1px 1px 0 #ffffff;
+        flex-shrink: 0;
+        border: 1px solid var(--accent-color);
       }
 
-      #video,
-      #canvas {
-        visibility: hidden;
+      .buy-top {
+        background-color: #fff0f5;
+        width: 100%;
+        height: 60%;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+      }
+
+      .buy-bottom {
+        background-color: var(--accent-color);
+        color: white;
+        text-align: center;
+        width: 100%;
+        height: 40%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: bold;
+        border-bottom-left-radius: 10px;
+        border-bottom-right-radius: 10px;
+      }
+
+      .buy-plus {
+        position: absolute;
+        right: -10px;
+        bottom: 15px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: white;
+        color: var(--accent-color);
+        font-size: 18px;
+        font-weight: bold;
+        border: 2px solid var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .texture-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 6px 0;
+      }
+
+      .texture-tabs::-webkit-scrollbar {
+        display: none;
+      }
+
+      .texture-tabs button {
+        padding: 6px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: var(--tab-bg);
+        color: var(--text-dark);
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .texture-tabs button.active {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+      }
+
+      .texture-tabs button,
+      .tab-switch button {
+        transition: background 0.3s ease, color 0.3s ease;
+      }
+
+      /* Vertical Opacity Slider */
+      .opacity-slider {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 3;
+      }
+
+      .opacity-slider input[type="range"] {
+        writing-mode: bt-lr;
+        -webkit-appearance: slider-vertical;
+        height: 100%;
+        /* Hapus transform rotate(180deg); agar bawah ke atas */
+      }
+
+      .opacity-slider label {
+        color: white;
+        margin-bottom: 8px;
+      }
+
+      .color-btn.transparent {
+        background-color: transparent;
+        border: 2px dashed #ccc;
+        color: #ccc;
       }
     </style>
+  </head>
+  <body>
+    <video id="video" autoplay muted playsinline style="visibility: hidden"></video>
+    <canvas id="canvas" style="visibility: hidden"></canvas>
+
+    <div class="ui-overlay">
+      <header>
+        <div class="top-bar">
+          <div>&#9776;</div>
+          <div>&#128722;</div>
+        </div>
+      </header>
+
+      <div class="main-controls">
+        <div class="tab-switch">
+          <button class="active" data-tab="lipstick">Lipstick</button>
+          <button data-tab="petal">Petal</button>
+          <button data-tab="ombre">Lipstick Ombre</button>
+        </div>
+
+        <div class="bottom-controls">
+          <div class="color-options-wrapper">
+            <div class="color-row-wrapper">
+              <div class="buy-card">
+                <div class="buy-top"></div>
+                <div class="buy-bottom">Buy</div>
+                <div class="buy-plus">+</div>
+              </div>
+              <div class="color-row" id="colorRow">
+                <div class="color-btn">&#x2715;</div>
+              </div>
+            </div>
+            <div class="texture-tabs" id="textureTabs"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vertical Opacity Slider -->
+    <div class="opacity-slider">
+      <input type="range" id="opacityRange" min="0" max="100" value="50" />
+      <label for="opacityRange" id="opacityLabel">50%</label>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  </head>
-
-  <body>
-    <div class="tabs">
-      <button class="tab active" data-tab="lipstick">Lipstick</button>
-      <button class="tab" data-tab="foundation">Foundation</button>
-      <button class="tab" data-tab="blush">Blush</button>
-      <button class="tab" data-tab="eyeshadow">Eyeshadow</button>
-    </div>
-
-    <div class="tab-content">
-      <div class="tab-panel active" id="lipstick">
-        <div class="phone-frame">
-          <video id="video" autoplay playsinline muted></video>
-          <canvas id="canvas"></canvas>
-          <div id="controls"></div>
-        </div>
-      </div>
-      <div class="tab-panel" id="foundation">
-        <div class="phone-frame">
-          <div class="coming-soon">Coming Soon ✨</div>
-        </div>
-      </div>
-      <div class="tab-panel" id="blush">
-        <div class="phone-frame">
-          <div class="coming-soon">Coming Soon ✨</div>
-        </div>
-      </div>
-      <div class="tab-panel" id="eyeshadow">
-        <div class="phone-frame">
-          <div class="coming-soon">Coming Soon ✨</div>
-        </div>
-      </div>
-    </div>
-
     <script>
-      const tabs = document.querySelectorAll(".tab");
-      const panels = document.querySelectorAll(".tab-panel");
-
-      tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
-          tabs.forEach((t) => t.classList.remove("active"));
-          tab.classList.add("active");
-          const selected = tab.getAttribute("data-tab");
-          panels.forEach((panel) => {
-            panel.classList.toggle("active", panel.id === selected);
-          });
-        });
-      });
-
       const video = document.getElementById("video");
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const controls = document.getElementById("controls");
+      const colorRow = document.getElementById("colorRow");
+      const textureTabs = document.getElementById("textureTabs");
 
+      let opacity = 0.5;
       let selectedColor = "rgba(255, 0, 128, 0.5)";
-      const lipstickColors = ["#B01228", "#C8A688", "#A3382D", "#A25D7A", "#F3B08B", "#FF8FA3", "#8A1C3B"];
+      let selectedColorTop = selectedColor;
+      let selectedColorBottom = selectedColor;
+      let currentTab = "lipstick";
+      let currentTexture = "Satin";
 
-      lipstickColors.forEach((hex) => {
-        const btn = document.createElement("div");
-        btn.className = "color-btn";
-        btn.style.backgroundColor = hex;
-        btn.onclick = () => (selectedColor = hexToRgba(hex, 0.5));
-        controls.appendChild(btn);
-      });
+      const textures = {
+        lipstick: {
+          Satin: ["#5d0c0c", "#b33951", "#f3a683", "#d9b8b2", "#aa6f73", "#c3a38a"],
+          Metallic: ["#d4af37", "#c0c0c0", "#b87333", "#999999", "#777777"],
+          Matte: ["#8b0000", "#a52a2a", "#e97451", "#d2691e", "#c1440e"],
+          Shimmer: ["#fddde6", "#fbb1bd", "#ffd1dc", "#ffe4e1", "#f3c6b8"],
+          Glitter: ["#ff69b4", "#dda0dd", "#e6e6fa", "#e0b0ff", "#ffb6c1"],
+        },
+        petal: {
+          Soft: ["#ffeaea", "#ffd6d6", "#ffc2c2", "#ffadad"],
+          Bloom: ["#f8c8dc", "#f2a7c1", "#eb82a9", "#db4c77"],
+        },
+        ombre: {
+          Duo: [
+            ["#4b0d0d", "#6d1e1e"],
+            ["#b26a74", "#990f26"],
+            ["#6f2a82", "#a75bbb"],
+            ["#ea3b3b", "#570202"],
+            ["#77185d", "#eb2698"],
+            ["#52105b", "#c533d4"],
+          ],
+        },
+      };
 
-      function hexToRgba(hex, alpha) {
+      function hexToRgba(hex, alpha = opacity) {
         const bigint = parseInt(hex.slice(1), 16);
         const r = (bigint >> 16) & 255;
         const g = (bigint >> 8) & 255;
@@ -234,16 +368,87 @@
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       }
 
-      function drawLipColor(landmarks, color) {
+      function renderTextureTabs() {
+        textureTabs.innerHTML = "";
+        const currentTextures = textures[currentTab];
+        if (!currentTextures) return;
+
+        Object.keys(currentTextures).forEach((type) => {
+          const btn = document.createElement("button");
+          btn.textContent = type;
+          btn.className = currentTexture === type ? "active" : "";
+          btn.onclick = () => {
+            currentTexture = type;
+            renderTextureTabs();
+            renderColors();
+          };
+          textureTabs.appendChild(btn);
+        });
+      }
+
+      function renderColors() {
+        const base = Array.from(colorRow.children).slice(0, 1);
+        colorRow.innerHTML = "";
+        base.forEach((el) => {
+          if (el.textContent.trim() === "✕") {
+            el.classList.add("transparent");
+            el.onclick = () => {
+              selectedColor = "rgba(0, 0, 0, 0)";
+              selectedColorTop = selectedColorBottom = selectedColor;
+              renderColors();
+            };
+          }
+          colorRow.appendChild(el);
+        });
+
+        const currentTextures = textures[currentTab];
+        if (!currentTextures || !currentTextures[currentTexture]) return;
+
+        if (currentTab === "ombre") {
+          currentTextures[currentTexture].forEach(([left, right]) => {
+            const btn = document.createElement("div");
+            btn.className = "color-btn";
+            btn.style.background = `linear-gradient(to right, ${left}, ${right})`;
+            const isSelected = selectedColorTop === hexToRgba(left) && selectedColorBottom === hexToRgba(right);
+            if (isSelected) btn.classList.add("selected");
+
+            btn.onclick = () => {
+              selectedColorTop = hexToRgba(left);
+              selectedColorBottom = hexToRgba(right);
+              renderColors();
+            };
+
+            colorRow.appendChild(btn);
+          });
+          return;
+        }
+
+        currentTextures[currentTexture].forEach((hex) => {
+          const btn = document.createElement("div");
+          btn.className = "color-btn";
+          btn.style.backgroundColor = hex;
+
+          const rgba = hexToRgba(hex);
+          const isSelected = rgba === selectedColor;
+          if (isSelected) btn.classList.add("selected");
+
+          btn.onclick = () => {
+            selectedColor = rgba;
+            renderColors();
+          };
+
+          colorRow.appendChild(btn);
+        });
+      }
+
+      function drawLipColor(landmarks, colorTop, colorBottom = colorTop) {
         const outerLower = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291];
         const innerLower = [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308];
         const outerUpper = [61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291];
         const innerUpper = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308];
 
-        // Combine outer and inner paths for evenodd fill rule
-        function drawAndFillSection(outerPts, innerPts) {
+        function drawAndFill(outerPts, innerPts, color) {
           ctx.beginPath();
-          // Outer path
           outerPts.forEach((i, idx) => {
             const pt = landmarks[i];
             const x = pt.x * canvas.width;
@@ -252,7 +457,6 @@
           });
           ctx.closePath();
 
-          // Inner path (clockwise or counter-clockwise relative to outer)
           innerPts.forEach((i, idx) => {
             const pt = landmarks[i];
             const x = pt.x * canvas.width;
@@ -262,33 +466,38 @@
           ctx.closePath();
 
           ctx.fillStyle = color;
-          ctx.globalAlpha = 0.5; // Revert to desired transparency
-          ctx.fill("evenodd"); // Use 'evenodd' fill rule
+          ctx.globalAlpha = opacity;
+          ctx.fill("evenodd");
+          ctx.globalAlpha = 1;
         }
 
-        drawAndFillSection(outerLower, innerLower);
-        drawAndFillSection(outerUpper, innerUpper);
+        drawAndFill(outerLower, innerLower, colorBottom);
+        drawAndFill(outerUpper, innerUpper, colorTop);
       }
 
-      async function setupCamera() {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-          video.srcObject = stream;
-          video.setAttribute("playsinline", true); // ← penting buat Android Safari & Chrome
+      document.getElementById("opacityRange").addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        opacity = val / 100;
+        document.getElementById("opacityLabel").innerText = `${val}%`;
+        renderColors();
+      });
 
-          await new Promise((resolve) => {
-            video.onloadedmetadata = () => {
-              video.play().then(resolve);
-            };
-          });
+      document.querySelectorAll(".tab-switch button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-switch button").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentTab = btn.dataset.tab;
+          const texturesForTab = textures[currentTab];
+          currentTexture = texturesForTab ? Object.keys(texturesForTab)[0] : "";
+          selectedColorTop = selectedColor;
+          selectedColorBottom = selectedColor;
+          renderTextureTabs();
+          renderColors();
+        });
+      });
 
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        } catch (err) {
-          alert("Failed to acquire camera feed: " + err.name + ": " + err.message);
-          throw err;
-        }
-      }
+      renderTextureTabs();
+      renderColors();
 
       const faceMesh = new FaceMesh({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
@@ -302,23 +511,34 @@
       });
 
       faceMesh.onResults((results) => {
-        // tampilkan video dan canvas saat data pertama kali tersedia
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         video.style.visibility = "visible";
         canvas.style.visibility = "visible";
 
-        ctx.save();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.translate(canvas.width, 0); // Move origin to the right
-        ctx.scale(-1, 1); // Flip horizontally
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        if (results.multiFaceLandmarks?.length > 0) {
+        if (results.multiFaceLandmarks.length > 0) {
           const landmarks = results.multiFaceLandmarks[0];
-          const activeTab = document.querySelector(".tab.active").dataset.tab;
-          if (activeTab === "lipstick") drawLipColor(landmarks, selectedColor);
+
+          if (currentTab === "lipstick" || currentTab === "petal") {
+            drawLipColor(landmarks, selectedColor);
+          } else if (currentTab === "ombre") {
+            drawLipColor(landmarks, selectedColorTop, selectedColorBottom);
+          }
         }
-        ctx.restore(); // Restore to original state at the end
+
+        ctx.restore();
       });
+
+      async function setupCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+        await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
 
       setupCamera().then(() => {
         const camera = new Camera(video, {
