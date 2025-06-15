@@ -312,6 +312,24 @@
           </div>
         </div>
       </div>
+      <div
+        id="videoInfo"
+        style="
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          background: rgba(0, 0, 0, 0.6);
+          color: white;
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          z-index: 10;
+          font-family: monospace;
+          pointer-events: none;
+          white-space: pre-line;
+          text-align: right;
+        "
+      ></div>
     </div>
 
     <!-- Vertical Opacity Slider -->
@@ -536,17 +554,16 @@
         const constraints = {
           video: {
             facingMode: "user",
-            aspectRatio: 1.5, // preferensi target, bukan jaminan
+            aspectRatio: 1.5,
           },
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
 
-        // Tunggu sampai video benar-benar punya dimensi valid
+        // Tunggu metadata & validasi dimensi
         await new Promise((resolve) => {
           video.onloadedmetadata = () => {
-            // Tambahan pengecekan untuk iOS agar tidak 0
             if (video.videoWidth === 0 || video.videoHeight === 0) {
               setTimeout(resolve, 100);
             } else {
@@ -555,31 +572,34 @@
           };
         });
 
-        // Kadang Safari masih butuh delay tambahan agar dimensi valid
         while (video.videoWidth === 0 || video.videoHeight === 0) {
           await new Promise((r) => setTimeout(r, 50));
         }
 
         const vw = video.videoWidth;
         const vh = video.videoHeight;
-        const aspectRatio = vw / vh;
+        const ratio = (vw / vh).toFixed(2);
 
-        // Sesuaikan agar canvas proporsional dengan layar
         const maxW = window.innerWidth;
         const maxH = window.innerHeight;
 
         let canvasW = maxW;
-        let canvasH = canvasW / aspectRatio;
+        let canvasH = canvasW / (vw / vh);
 
         if (canvasH > maxH) {
           canvasH = maxH;
-          canvasW = canvasH * aspectRatio;
+          canvasW = canvasH * (vw / vh);
         }
 
         canvas.width = canvasW;
         canvas.height = canvasH;
         video.width = canvasW;
         video.height = canvasH;
+
+        // Tampilkan info di pojok kanan atas
+        const infoBox = document.getElementById("videoInfo");
+        infoBox.textContent =
+          `Video: ${vw}×${vh}\n` + `Canvas: ${canvasW.toFixed(0)}×${canvasH.toFixed(0)}\n` + `Aspect: ${ratio}`;
       }
 
       setupCamera().then(() => {
