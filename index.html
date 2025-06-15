@@ -26,8 +26,11 @@
 
       html,
       body {
-        height: 100%;
+        margin: 0;
+        padding: 0;
         background: black;
+        height: 100vh;
+        width: 100vw;
         overflow: hidden;
       }
 
@@ -36,34 +39,14 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
         z-index: 0;
-      }
-
-      video {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover;
-        z-index: 0;
-      }
-
-      canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
       }
 
       .ui-overlay {
-        position: absolute;
+        position: fixed;
         z-index: 2;
         width: 100%;
         height: 100%;
@@ -311,9 +294,9 @@
 
       <div class="main-controls">
         <div class="tab-switch">
-          <button class="active" data-tab="lipstick">Lipstick</button>
-          <button data-tab="petal">Petal</button>
-          <button data-tab="ombre">Lipstick Ombre</button>
+          <button class="tab-switch-item" class="active" data-tab="lipstick">Lipstick</button>
+          <button class="tab-switch-item" data-tab="petal">Petal</button>
+          <button class="tab-switch-item" data-tab="ombre">Lipstick Ombre</button>
         </div>
 
         <div class="bottom-controls">
@@ -564,16 +547,9 @@
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
-
         await new Promise((resolve) => (video.onloadedmetadata = resolve));
-
-        function resizeCanvasToVideo() {
-          canvas.width = video.offsetWidth;
-          canvas.height = video.offsetHeight;
-        }
-
-        resizeCanvasToVideo();
-        window.addEventListener("resize", resizeCanvasToVideo);
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
       }
 
       setupCamera().then(() => {
