@@ -533,7 +533,7 @@
       });
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", exact: 1.5 } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", aspectRatio: 1.5 } });
         video.srcObject = stream;
         await new Promise((resolve) => (video.onloadedmetadata = resolve));
         canvas.width = video.videoWidth;
