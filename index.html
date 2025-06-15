@@ -42,6 +42,26 @@
         z-index: 0;
       }
 
+      video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: 0;
+      }
+
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+      }
+
       .ui-overlay {
         position: absolute;
         z-index: 2;
@@ -544,9 +564,16 @@
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
+
         await new Promise((resolve) => (video.onloadedmetadata = resolve));
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+
+        function resizeCanvasToVideo() {
+          canvas.width = video.offsetWidth;
+          canvas.height = video.offsetHeight;
+        }
+
+        resizeCanvasToVideo();
+        window.addEventListener("resize", resizeCanvasToVideo);
       }
 
       setupCamera().then(() => {
