@@ -577,19 +577,20 @@
           await new Promise((r) => setTimeout(r, 50));
         }
 
-        // Tambahkan sinkronisasi dengan ukuran video DOM sebenarnya
-        await new Promise((r) => setTimeout(r, 50)); // beri waktu rendering
-        const videoRect = video.getBoundingClientRect();
-        canvas.width = videoRect.width;
-        canvas.height = videoRect.height;
+        // Gunakan resolusi internal stream sebagai ukuran canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
 
-        // Info tampilan
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-        const ratio = (vw / vh).toFixed(2);
+        // Gunakan CSS untuk scale ke layar
+        video.style.width = "100vw";
+        video.style.height = "100vh";
+        canvas.style.width = "100vw";
+        canvas.style.height = "100vh";
+
+        // Debug info
+        const ratio = (video.videoWidth / video.videoHeight).toFixed(2);
         document.getElementById("videoInfo").textContent =
-          `Video: ${vw}×${vh}\n` +
-          `DOM: ${videoRect.width.toFixed(0)}×${videoRect.height.toFixed(0)}\n` +
+          `Stream: ${video.videoWidth}×${video.videoHeight}\n` +
           `Canvas: ${canvas.width}×${canvas.height}\n` +
           `Aspect: ${ratio}`;
       }
