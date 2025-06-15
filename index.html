@@ -26,10 +26,9 @@
 
       html,
       body {
-        width: 100%;
         height: 100%;
-        overflow: hidden;
         background: black;
+        overflow: hidden;
       }
 
       video,
@@ -37,16 +36,10 @@
         position: fixed;
         top: 0;
         left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
         z-index: 0;
-      }
-
-      video {
-        transform: scaleX(-1); /* flip horizontal */
-        border: 2px solid red; /* optional debug */
-      }
-
-      canvas {
-        border: 2px solid green; /* optional debug */
       }
 
       .ui-overlay {
@@ -54,12 +47,9 @@
         z-index: 2;
         width: 100%;
         height: 100%;
-        top: 0;
-        left: 0;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        pointer-events: none;
       }
 
       header {
@@ -86,7 +76,6 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        pointer-events: auto;
       }
 
       .tab-switch {
@@ -256,6 +245,7 @@
         transition: background 0.3s ease, color 0.3s ease;
       }
 
+      /* Vertical Opacity Slider */
       .opacity-slider {
         position: absolute;
         right: 10px;
@@ -272,6 +262,7 @@
         writing-mode: bt-lr;
         -webkit-appearance: slider-vertical;
         height: 100%;
+        /* Hapus transform rotate(180deg); agar bawah ke atas */
       }
 
       .opacity-slider label {
@@ -284,25 +275,8 @@
         border: 2px dashed #ccc;
         color: #ccc;
       }
-
-      #videoInfo {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        z-index: 10;
-        font-family: monospace;
-        pointer-events: none;
-        white-space: pre-line;
-        text-align: right;
-      }
     </style>
   </head>
-
   <body>
     <video id="video" autoplay muted playsinline style="visibility: hidden"></video>
     <canvas id="canvas" style="visibility: hidden"></canvas>
@@ -340,12 +314,11 @@
       </div>
     </div>
 
+    <!-- Vertical Opacity Slider -->
     <div class="opacity-slider">
       <input type="range" id="opacityRange" min="0" max="100" value="50" />
       <label for="opacityRange" id="opacityLabel">50%</label>
     </div>
-
-    <div id="videoInfo"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -568,53 +541,11 @@
             aspectRatio: 1.777,
           },
         };
-
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
-
-        // Tunggu metadata
-        await new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            if (video.videoWidth === 0 || video.videoHeight === 0) {
-              setTimeout(resolve, 100);
-            } else {
-              resolve();
-            }
-          };
-        });
-
-        // Pastikan dimensi valid
-        while (video.videoWidth === 0 || video.videoHeight === 0) {
-          await new Promise((r) => setTimeout(r, 50));
-        }
-
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-        const ratio = (vw / vh).toFixed(2);
-
-        const maxW = window.innerWidth;
-        const maxH = window.innerHeight;
-
-        let canvasW = maxW;
-        let canvasH = canvasW / (vw / vh);
-
-        if (canvasH > maxH) {
-          canvasH = maxH;
-          canvasW = canvasH * (vw / vh);
-        }
-
-        // Set ukuran fisik dan tampilan
-        canvas.width = canvasW;
-        canvas.height = canvasH;
-        video.width = canvasW;
-        video.height = canvasH;
-        video.style.width = canvasW + "px";
-        video.style.height = canvasH + "px";
-
-        // Info
-        const infoBox = document.getElementById("videoInfo");
-        infoBox.textContent =
-          `Video: ${vw}×${vh}\n` + `Canvas: ${canvasW.toFixed(0)}×${canvasH.toFixed(0)}\n` + `Aspect: ${ratio}`;
+        await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
       }
 
       setupCamera().then(() => {
