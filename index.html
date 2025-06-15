@@ -350,11 +350,11 @@
         },
         ombre: {
           Duo: [
-            ["#6d1e1e", "#4b0d0d"],
+            ["#4b0d0d", "#6d1e1e"],
             ["#b26a74", "#990f26"],
-            ["#a75bbb", "#6f2a82"],
+            ["#6f2a82", "#a75bbb"],
             ["#ea3b3b", "#570202"],
-            ["#eb2698", "#77185d"],
+            ["#77185d", "#eb2698"],
             ["#52105b", "#c533d4"],
           ],
         },
@@ -466,10 +466,9 @@
         const cx = center.x * canvas.width;
         const cy = center.y * canvas.height;
 
-        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, canvas.width / 3);
-        gradient.addColorStop(0.0, colorTop);
-        gradient.addColorStop(0.3, colorTop);
-        gradient.addColorStop(1.0, colorBottom);
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, canvas.width / 10);
+        gradient.addColorStop(0, colorTop);
+        gradient.addColorStop(1, colorBottom);
 
         ctx.save();
         ctx.globalAlpha = opacity;
