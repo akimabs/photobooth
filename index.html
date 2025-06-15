@@ -533,11 +533,53 @@
       });
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", aspectRatio: 1.5 } });
+        const constraints = {
+          video: {
+            facingMode: "user",
+            aspectRatio: 1.5, // preferensi target, bukan jaminan
+          },
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
-        await new Promise((resolve) => (video.onloadedmetadata = resolve));
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+
+        // Tunggu sampai video benar-benar punya dimensi valid
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            // Tambahan pengecekan untuk iOS agar tidak 0
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+              setTimeout(resolve, 100);
+            } else {
+              resolve();
+            }
+          };
+        });
+
+        // Kadang Safari masih butuh delay tambahan agar dimensi valid
+        while (video.videoWidth === 0 || video.videoHeight === 0) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
+
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const aspectRatio = vw / vh;
+
+        // Sesuaikan agar canvas proporsional dengan layar
+        const maxW = window.innerWidth;
+        const maxH = window.innerHeight;
+
+        let canvasW = maxW;
+        let canvasH = canvasW / aspectRatio;
+
+        if (canvasH > maxH) {
+          canvasH = maxH;
+          canvasW = canvasH * aspectRatio;
+        }
+
+        canvas.width = canvasW;
+        canvas.height = canvasH;
+        video.width = canvasW;
+        video.height = canvasH;
       }
 
       setupCamera().then(() => {
