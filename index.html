@@ -34,12 +34,12 @@
       video,
       canvas {
         position: fixed;
-        top: 0;
-        left: 0;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        object-fit: cover;
         width: 100vw;
         height: 100vh;
-        object-fit: cover;
-        z-index: 0;
       }
 
       .ui-overlay {
@@ -533,11 +533,26 @@
       });
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        video.srcObject = stream;
         await new Promise((resolve) => (video.onloadedmetadata = resolve));
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+
+        // Ambil ukuran asli kamera
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+        const aspectRatio = videoWidth / videoHeight;
+
+        // Gunakan ukuran layar tapi tetap jaga rasio
+        const maxWidth = window.innerWidth;
+        const maxHeight = window.innerHeight;
+        let canvasWidth = maxWidth;
+        let canvasHeight = maxWidth / aspectRatio;
+
+        if (canvasHeight > maxHeight) {
+          canvasHeight = maxHeight;
+          canvasWidth = maxHeight * aspectRatio;
+        }
+
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
       }
 
       setupCamera().then(() => {
