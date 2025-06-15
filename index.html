@@ -34,12 +34,12 @@
       video,
       canvas {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        object-fit: cover;
+        top: 0;
+        left: 0;
         width: 100vw;
         height: 100vh;
+        object-fit: cover;
+        z-index: 0;
       }
 
       .ui-overlay {
@@ -278,8 +278,17 @@
     </style>
   </head>
   <body>
-    <video id="video" autoplay muted playsinline style="visibility: hidden"></video>
-    <canvas id="canvas" style="visibility: hidden"></canvas>
+    <video
+      id="video"
+      autoplay
+      muted
+      playsinline
+      style="visibility: hidden; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: cover"
+    ></video>
+    <canvas
+      id="canvas"
+      style="visibility: hidden; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%)"
+    ></canvas>
 
     <div class="ui-overlay">
       <header>
@@ -511,13 +520,15 @@
       });
 
       faceMesh.onResults((results) => {
+        // Tampilkan kamera jika sudah siap
+        video.style.visibility = "visible";
+        canvas.style.visibility = "visible";
+
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        video.style.visibility = "visible";
-        canvas.style.visibility = "visible";
 
         if (results.multiFaceLandmarks.length > 0) {
           const landmarks = results.multiFaceLandmarks[0];
@@ -533,16 +544,18 @@
       });
 
       async function setupCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+
         await new Promise((resolve) => (video.onloadedmetadata = resolve));
 
-        // Ambil ukuran asli kamera
         const videoWidth = video.videoWidth;
         const videoHeight = video.videoHeight;
         const aspectRatio = videoWidth / videoHeight;
 
-        // Gunakan ukuran layar tapi tetap jaga rasio
         const maxWidth = window.innerWidth;
         const maxHeight = window.innerHeight;
+
         let canvasWidth = maxWidth;
         let canvasHeight = maxWidth / aspectRatio;
 
@@ -553,6 +566,9 @@
 
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
+
+        video.width = canvasWidth;
+        video.height = canvasHeight;
       }
 
       setupCamera().then(() => {
