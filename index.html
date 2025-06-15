@@ -547,7 +547,21 @@
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         video.srcObject = stream;
 
-        await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            if (video.videoWidth === 0 || video.videoHeight === 0) {
+              // Tambahan delay kecil jika video belum siap di iOS
+              setTimeout(resolve, 100);
+            } else {
+              resolve();
+            }
+          };
+        });
+
+        // Tunggu video ready secara penuh
+        while (video.videoWidth === 0 || video.videoHeight === 0) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
 
         const videoWidth = video.videoWidth;
         const videoHeight = video.videoHeight;
