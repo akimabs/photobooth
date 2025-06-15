@@ -278,17 +278,8 @@
     </style>
   </head>
   <body>
-    <video
-      id="video"
-      autoplay
-      muted
-      playsinline
-      style="visibility: hidden; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: cover"
-    ></video>
-    <canvas
-      id="canvas"
-      style="visibility: hidden; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%)"
-    ></canvas>
+    <video id="video" autoplay muted playsinline style="visibility: hidden"></video>
+    <canvas id="canvas" style="visibility: hidden"></canvas>
 
     <div class="ui-overlay">
       <header>
@@ -520,15 +511,13 @@
       });
 
       faceMesh.onResults((results) => {
-        // Tampilkan kamera jika sudah siap
-        video.style.visibility = "visible";
-        canvas.style.visibility = "visible";
-
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        video.style.visibility = "visible";
+        canvas.style.visibility = "visible";
 
         if (results.multiFaceLandmarks.length > 0) {
           const landmarks = results.multiFaceLandmarks[0];
@@ -544,45 +533,11 @@
       });
 
       async function setupCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", exact: 1.5 } });
         video.srcObject = stream;
-
-        await new Promise((resolve) => {
-          video.onloadedmetadata = () => {
-            if (video.videoWidth === 0 || video.videoHeight === 0) {
-              // Tambahan delay kecil jika video belum siap di iOS
-              setTimeout(resolve, 100);
-            } else {
-              resolve();
-            }
-          };
-        });
-
-        // Tunggu video ready secara penuh
-        while (video.videoWidth === 0 || video.videoHeight === 0) {
-          await new Promise((r) => setTimeout(r, 50));
-        }
-
-        const videoWidth = video.videoWidth;
-        const videoHeight = video.videoHeight;
-        const aspectRatio = videoWidth / videoHeight;
-
-        const maxWidth = window.innerWidth;
-        const maxHeight = window.innerHeight;
-
-        let canvasWidth = maxWidth;
-        let canvasHeight = maxWidth / aspectRatio;
-
-        if (canvasHeight > maxHeight) {
-          canvasHeight = maxHeight;
-          canvasWidth = maxHeight * aspectRatio;
-        }
-
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-
-        video.width = canvasWidth;
-        video.height = canvasHeight;
+        await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
       }
 
       setupCamera().then(() => {
