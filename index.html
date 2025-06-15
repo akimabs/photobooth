@@ -40,6 +40,15 @@
         z-index: 0;
       }
 
+      video {
+        transform: scaleX(-1); /* flip horizontal */
+        border: 2px solid red; /* optional debug */
+      }
+
+      canvas {
+        border: 2px solid green; /* optional debug */
+      }
+
       .ui-overlay {
         position: absolute;
         z-index: 2;
@@ -531,12 +540,8 @@
       faceMesh.onResults((results) => {
         ctx.save();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-        if (!isIOS) {
-          ctx.translate(canvas.width, 0);
-          ctx.scale(-1, 1); // Mirror hanya untuk non-iOS (karena iOS kamera depan sudah mirror sendiri)
-        }
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         video.style.visibility = "visible";
         canvas.style.visibility = "visible";
@@ -567,7 +572,7 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = stream;
 
-        // Tunggu metadata & validasi dimensi
+        // Tunggu metadata
         await new Promise((resolve) => {
           video.onloadedmetadata = () => {
             if (video.videoWidth === 0 || video.videoHeight === 0) {
@@ -578,6 +583,7 @@
           };
         });
 
+        // Pastikan dimensi valid
         while (video.videoWidth === 0 || video.videoHeight === 0) {
           await new Promise((r) => setTimeout(r, 50));
         }
@@ -597,12 +603,15 @@
           canvasW = canvasH * (vw / vh);
         }
 
+        // Set ukuran fisik dan tampilan
         canvas.width = canvasW;
         canvas.height = canvasH;
         video.width = canvasW;
         video.height = canvasH;
+        video.style.width = canvasW + "px";
+        video.style.height = canvasH + "px";
 
-        // Tampilkan info di pojok kanan atas
+        // Info
         const infoBox = document.getElementById("videoInfo");
         infoBox.textContent =
           `Video: ${vw}×${vh}\n` + `Canvas: ${canvasW.toFixed(0)}×${canvasH.toFixed(0)}\n` + `Aspect: ${ratio}`;
