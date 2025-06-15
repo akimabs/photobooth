@@ -355,7 +355,7 @@
             ["#a75bbb", "#6f2a82"],
             ["#ea3b3b", "#570202"],
             ["#eb2698", "#77185d"],
-            ["#c533d4", "#52105b"],
+            ["#52105b", "#c533d4"],
           ],
         },
       };
@@ -405,16 +405,16 @@
         if (!currentTextures || !currentTextures[currentTexture]) return;
 
         if (currentTab === "ombre") {
-          currentTextures[currentTexture].forEach(([lightColor, dominantColor]) => {
+          currentTextures[currentTexture].forEach(([left, right]) => {
             const btn = document.createElement("div");
             btn.className = "color-btn";
-            btn.style.background = `linear-gradient(to right, ${lightColor}, ${dominantColor})`;
-            const isSelected = selectedColorTop === hexToRgba(lightColor) && selectedColorBottom === hexToRgba(dominantColor);
+            btn.style.background = `linear-gradient(to right, ${left}, ${right})`;
+            const isSelected = selectedColorTop === hexToRgba(left) && selectedColorBottom === hexToRgba(right);
             if (isSelected) btn.classList.add("selected");
 
             btn.onclick = () => {
-              selectedColorTop = hexToRgba(lightColor); // warna tipis di tengah
-              selectedColorBottom = hexToRgba(dominantColor); // warna dominan di luar
+              selectedColorTop = hexToRgba(left);
+              selectedColorBottom = hexToRgba(right);
               renderColors();
             };
 
@@ -441,71 +441,41 @@
         });
       }
 
-      function drawLipColor(landmarks, colorOuter, colorInner = colorOuter) {
+      function drawLipColor(landmarks, colorTop, colorBottom = colorTop) {
         const outerLips = [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267, 0, 37, 39, 40, 185];
         const innerLips = [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310, 311, 312, 13, 82, 81, 80, 191];
 
-        // Path bibir lengkap (outer dan inner)
-        const lipPath = new Path2D();
+        const path = new Path2D();
         outerLips.forEach((i, idx) => {
           const pt = landmarks[i];
           const x = pt.x * canvas.width;
           const y = pt.y * canvas.height;
-          idx === 0 ? lipPath.moveTo(x, y) : lipPath.lineTo(x, y);
+          idx === 0 ? path.moveTo(x, y) : path.lineTo(x, y);
         });
-        lipPath.closePath();
+        path.closePath();
 
-        innerLips
-          .slice()
-          .reverse()
-          .forEach((i, idx) => {
-            const pt = landmarks[i];
-            const x = pt.x * canvas.width;
-            const y = pt.y * canvas.height;
-            idx === 0 ? lipPath.moveTo(x, y) : lipPath.lineTo(x, y);
-          });
-        lipPath.closePath();
+        innerLips.forEach((i, idx) => {
+          const pt = landmarks[i];
+          const x = pt.x * canvas.width;
+          const y = pt.y * canvas.height;
+          idx === 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+        });
+        path.closePath();
 
-        // Warna dasar bibir (soft)
-        ctx.save();
-        ctx.globalAlpha = opacity * 0.35; // lebih tipis
-        ctx.fillStyle = colorOuter;
-        ctx.fill(lipPath, "evenodd");
-        ctx.restore();
+        const center = landmarks[13]; // titik tengah bibir (sekitar tengah bawah)
+        const cx = center.x * canvas.width;
+        const cy = center.y * canvas.height;
 
-        // Titik tengah bibir bagian dalam
-        const innerUpper = [78, 191, 80, 81, 82];
-        const innerLower = [87, 14, 317, 402, 318];
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, canvas.width / 3);
+        gradient.addColorStop(0.0, colorTop);
+        gradient.addColorStop(0.3, colorTop);
+        gradient.addColorStop(1.0, colorBottom);
 
-        const avgPoint = (indices) => {
-          const pts = indices.map((i) => landmarks[i]);
-          const x = pts.reduce((sum, p) => sum + p.x, 0) / pts.length;
-          const y = pts.reduce((sum, p) => sum + p.y, 0) / pts.length;
-          return { x, y };
-        };
-
-        const upper = avgPoint(innerUpper);
-        const lower = avgPoint(innerLower);
-
-        const cx = ((upper.x + lower.x) / 2) * canvas.width;
-        const cy = ((upper.y + lower.y) / 2) * canvas.height;
-        const radius = canvas.width * 0.06; // kecilin efek tebal
-
-        // Efek tebal hanya di tengah bibir dengan gradasi elliptical
         ctx.save();
         ctx.globalAlpha = opacity;
-        ctx.clip(lipPath);
-        ctx.translate(cx, cy);
-        ctx.scale(1.8, 1); // lebar horizontal
-        ctx.translate(-cx, -cy);
-
-        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-        gradient.addColorStop(0.0, colorInner);
-        gradient.addColorStop(0.15, colorInner); // tebal hanya di pusat
-        gradient.addColorStop(1.0, "rgba(0,0,0,0)");
-
         ctx.fillStyle = gradient;
-        ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+        ctx.fill(path, "evenodd");
+        ctx.globalAlpha = 1;
         ctx.restore();
       }
 
